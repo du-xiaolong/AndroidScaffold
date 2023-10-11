@@ -1,0 +1,27 @@
+package com.dxl.scaffold.ui
+
+import android.content.Context
+import android.text.TextUtils
+import android.util.AttributeSet
+import androidx.appcompat.widget.AppCompatTextView
+
+/**
+ * textView跑马灯效果
+ * @author duxiaolong
+ */
+class MarqueeTextView : AppCompatTextView {
+    constructor(context: Context) : super(context)
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
+    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(
+        context,
+        attrs,
+        defStyleAttr
+    )
+
+    init {
+        isSingleLine = true
+        ellipsize = TextUtils.TruncateAt.MARQUEE
+    }
+
+    override fun isFocused() = true
+}
