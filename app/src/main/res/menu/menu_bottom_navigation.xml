@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/clue"
+        android:icon="@drawable/tab_clue"
+        android:title="UI" />
+    <item
+        android:id="@+id/client"
+        android:icon="@drawable/tab_client"
+        android:title="客户" />
+    <item
+        android:id="@+id/order"
+        android:icon="@drawable/tab_order"
+        android:title="订单" />
+    <item
+        android:id="@+id/schedule"
+        android:icon="@drawable/tab_schedule"
+        android:title="日程" />
+
+    <item
+        android:id="@+id/mine"
+        android:icon="@drawable/tab_mine"
+        android:title="我的" />
+
+</menu>

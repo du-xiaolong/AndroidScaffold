@@ -1,19 +1,45 @@
 package com.dxl.androidscaffold
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.dxl.scaffold.Config
-import com.dxl.scaffold.errorInfo
-import com.dxl.scaffold.hint
-import com.dxl.scaffold.net.ApiException
+import androidx.core.view.forEachIndexed
+import androidx.fragment.app.Fragment
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.widget.ViewPager2
+import com.dxl.androidscaffold.databinding.ActivityMainBinding
+import com.dxl.androidscaffold.ui.main.UIFragment
+import com.dxl.scaffold.base.BaseViewModel
+import com.dxl.scaffold.base.BaseVmActivity
 
-class MainActivity : AppCompatActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+class MainActivity : BaseVmActivity<BaseViewModel, ActivityMainBinding>() {
 
-        Config {
-
+    override fun init(savedInstanceState: Bundle?) {
+        val fragments = listOf(
+            UIFragment.newInstance(),
+            BlankFragment.newInstance(),
+            BlankFragment.newInstance(),
+            BlankFragment.newInstance(),
+            BlankFragment.newInstance()
+        )
+        vb.viewPager.adapter = object :FragmentStateAdapter(this) {
+            override fun getItemCount() = fragments.size
+            override fun createFragment(position: Int): Fragment = fragments[position]
         }
+        vb.navView.setOnItemSelectedListener {
+            vb.navView.menu.forEachIndexed { index, item ->
+                if (it.itemId == item.itemId) {
+                    vb.viewPager.setCurrentItem(index, false)
+                }
+            }
+            true
+        }
+        vb.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                vb.navView.menu.getItem(position).isChecked = true
+            }
+        })
+
+        vb.viewPager.setCurrentItem(0, false)
+
     }
+
 }
