@@ -17,6 +17,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+        dataBinding = true
         buildConfig = true
     }
 
@@ -76,6 +77,8 @@ dependencies {
     api ("io.github.lucksiege:compress:v3.0.9")
 
     api("com.github.bumptech.glide:glide:4.15.1")
+
+    api("io.github.cymchad:BaseRecyclerViewAdapterHelper:3.0.14")
 
 
 }

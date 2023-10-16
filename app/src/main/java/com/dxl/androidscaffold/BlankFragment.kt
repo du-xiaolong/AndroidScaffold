@@ -10,6 +10,7 @@ import com.dxl.scaffold.base.BaseVmFragment
  * @date 2023/10/15
  */
 class BlankFragment : BaseVmFragment<BaseViewModel, FragmentBlankBinding>() {
+
     companion object {
         fun newInstance() = BlankFragment()
     }

@@ -60,8 +60,10 @@ class WaterMarkDrawable(
             type: WatermarkType = WatermarkType.BACKGROUND
         ) {
             if (type == WatermarkType.BACKGROUND) {
+                foreground = null
                 background = get(text, backgroundColor, watermarkColor, textSize, space)
             } else {
+                background = null
                 foreground = get(text, backgroundColor, watermarkColor, textSize, space)
             }
         }
@@ -79,8 +81,10 @@ class WaterMarkDrawable(
             if (rootView is ViewGroup && rootView.childCount > 0) {
                 val view = rootView.getChildAt(0)
                 if (type == WatermarkType.BACKGROUND) {
+                    view.foreground = null
                     view.background = get(text, backgroundColor, watermarkColor, textSize, space)
                 } else {
+                    view.background = null
                     view.foreground = get(text, backgroundColor, watermarkColor, textSize, space)
                 }
             }
