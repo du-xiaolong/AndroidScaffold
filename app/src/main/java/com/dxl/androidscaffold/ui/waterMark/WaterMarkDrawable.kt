@@ -21,7 +21,7 @@ import kotlin.math.sqrt
  * @date 2023/10/13
  * @param text 水印文字
  * @param watermarkColor 水印颜色
- * @param backgroundColor view背景颜色
+ * @param backgroundColor view背色
  * @param textSize 水印文字大小，单位px
  * @param space 水印间距
  */
