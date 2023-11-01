@@ -13,7 +13,10 @@ import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.util.Log
+import android.webkit.CookieManager
 import android.webkit.MimeTypeMap
+import android.webkit.URLUtil
+import androidx.activity.ComponentActivity
 import androidx.core.content.FileProvider
 import androidx.core.database.getLongOrNull
 import androidx.core.database.getStringOrNull
@@ -23,10 +26,15 @@ import com.blankj.utilcode.util.ConvertUtils
 import com.blankj.utilcode.util.FileIOUtils
 import com.blankj.utilcode.util.FileUtils
 import com.dxl.scaffold.base.BaseApp
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
+import okhttp3.Response
 import rxhttp.toDownloadFlow
+import rxhttp.wrapper.callback.UriFactory
+import rxhttp.wrapper.entity.Progress
 import rxhttp.wrapper.param.RxHttp
 import top.zibin.luban.Luban
 import top.zibin.luban.OnNewCompressListener
@@ -34,6 +42,9 @@ import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
+import java.net.HttpURLConnection
+import java.net.URL
+import java.net.URLDecoder
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -718,6 +729,83 @@ private fun isHuaWeiUri(uri: Uri?): Boolean {
     return "com.huawei.hidisk.fileprovider".equals(uri?.authority, true)
 }
 
+
+/**
+ * 下载文件，保存到公共目录（Downloads/云上鲁南）
+ */
+fun ComponentActivity.downloadToPublic(url: String, fileName: String? = null, onProgress: ((progress: Progress) -> Unit)? = null, onResult: (Result<String>) -> Unit) {
+    lifecycleScope.launch {
+        //获取文件名
+        var downloadFileName = fileName
+        if (fileName.isNullOrBlank()) {
+            //请求真实的文件名
+            downloadFileName = requestDownloadFileName(url)
+        }
+        if (downloadFileName.isNullOrBlank()){
+            //如果请求不到，使用链接文件名
+            downloadFileName = URLUtil.guessFileName(url, null, null)
+        }
+        if (downloadFileName.isNullOrBlank()) {
+            downloadFileName = "file"
+        }
+
+        RxHttp.get(url)
+            .toDownloadFlow(object : UriFactory(this@downloadToPublic) {
+                override fun insert(response: Response): Uri {
+                    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        ContentValues().run {
+                            put(MediaStore.MediaColumns.DISPLAY_NAME, downloadFileName) //文件名
+                            //取contentType响应头作为文件类型
+                            put(
+                                MediaStore.MediaColumns.MIME_TYPE,
+                                response.body?.contentType().toString()
+                            )
+                            //下载到Download目录
+                            put(
+                                MediaStore.MediaColumns.RELATIVE_PATH + "/云上鲁南",
+                                Environment.DIRECTORY_DOWNLOADS
+                            )
+                            val uri = MediaStore.Downloads.EXTERNAL_CONTENT_URI
+                            context.contentResolver.insert(uri, this)
+                        }
+                            ?: throw NullPointerException("Uri insert fail, Please change the file name")
+                    } else {
+                        Uri.fromFile(
+                            File(
+                                context.getExternalFilesDir("$DIRECTORY_DOWNLOADS/云上鲁南"),
+                                downloadFileName
+                            )
+                        )
+                    }
+                }
+            })
+            .onProgress {
+                onProgress?.invoke(it)
+            }.catch {
+                onResult.invoke(Result.failure(it))
+            }.collect {
+                onResult.invoke(Result.success(it.toString()))
+            }
+    }
+}
+
+
+/**
+ * 获取下载链接的真实文件名
+ */
+suspend fun requestDownloadFileName(downloadUrl: String): String? = withContext(Dispatchers.IO) {
+    kotlin.runCatching {
+        val url = URL(downloadUrl)
+        val httpURLConnection = url.openConnection() as HttpURLConnection
+        httpURLConnection.addRequestProperty("Cookie", CookieManager.getInstance().getCookie(downloadUrl))
+        httpURLConnection.connect()
+        val headerField = httpURLConnection.getHeaderField("Content-Disposition")
+        val fileName = headerField.split(";").firstOrNull { it.trim().startsWith("filename=") }
+            ?.substringAfter("filename=")?.replace("\"", "")
+        httpURLConnection.disconnect()
+        URLDecoder.decode(fileName, "UTF-8")
+    }.getOrNull()
+}
 
 
 

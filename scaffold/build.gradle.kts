@@ -69,9 +69,11 @@ dependencies {
     api("com.blankj:utilcodex:1.31.1")
 
     //rxHttp
-    api("com.github.liujingxing.rxhttp:rxhttp:3.2.0")
+    api("com.github.liujingxing.rxhttp:rxhttp:3.2.1")
+    //添加okhttp依赖
+    api("com.squareup.okhttp3:okhttp:4.11.0")
     //noinspection KaptUsageInsteadOfKsp
-    kapt("com.github.liujingxing.rxhttp:rxhttp-compiler:3.2.0")
+    kapt("com.github.liujingxing.rxhttp:rxhttp-compiler:3.2.1")
 
     // 图片压缩 (按需引入)
     api ("io.github.lucksiege:compress:v3.0.9")
