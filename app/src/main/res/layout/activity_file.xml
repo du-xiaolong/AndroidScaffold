@@ -16,16 +16,17 @@
             android:textSize="12sp" />
 
         <TextView
-            android:padding="10dp"
-            android:text="--"
             android:id="@+id/tv_info"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="--" />
 
         <LinearLayout
-            android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_save_to_file_dir"
                 android:layout_width="wrap_content"
@@ -43,9 +44,9 @@
         </LinearLayout>
 
         <LinearLayout
-            android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_copy_to_cache"
@@ -55,6 +56,88 @@
                 android:textSize="12sp" />
 
         </LinearLayout>
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="外部存储"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/tv_external_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="--" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_check_external"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="检测可用性"
+                android:textSize="12sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_read_external"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="读取外部目录文件"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="媒体"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/tv_media_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="--" />
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_save_image"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="保存图片"
+                android:textSize="12sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_save_video"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="保存视频"
+                android:textSize="12sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_save_audio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="保存音频"
+                android:textSize="12sp" />
+
+
+        </LinearLayout>
+
 
 
 

@@ -23,6 +23,7 @@ class UIFragment : BaseVmFragment<BaseViewModel, FragmentUiBinding>() {
         fun newInstance() = UIFragment()
     }
 
+
     override fun initView() {
         val funcs = listOf(
             "水印",

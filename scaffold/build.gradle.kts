@@ -9,8 +9,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        minSdk = 22
-
+        minSdk = 21
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
@@ -51,7 +50,7 @@ dependencies {
 
     api("com.github.li-xiaojun:XPopup:2.9.19")
     //腾讯MMKV
-    implementation("com.tencent:mmkv:1.2.16")
+    implementation("com.tencent:mmkv:1.3.1")
     //fastJson
     api("com.alibaba:fastjson:1.2.79")
 
@@ -81,6 +80,8 @@ dependencies {
     api("com.github.bumptech.glide:glide:4.15.1")
 
     api("io.github.cymchad:BaseRecyclerViewAdapterHelper:3.0.14")
+
+    api("com.guolindev.permissionx:permissionx:1.7.1")
 
 
 }
