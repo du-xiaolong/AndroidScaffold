@@ -9,10 +9,12 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.view.View
+import android.webkit.MimeTypeMap
 import com.dxl.androidscaffold.R
 import com.dxl.androidscaffold.databinding.ActivityFileBinding
 import com.dxl.scaffold.base.BaseViewModel
 import com.dxl.scaffold.base.BaseVmActivity
+import com.dxl.scaffold.utils.startActivity
 import com.permissionx.guolindev.PermissionX
 import com.permissionx.guolindev.callback.RequestCallback
 import java.io.File
@@ -80,6 +82,8 @@ class FileActivity : BaseVmActivity<BaseViewModel, ActivityFileBinding>(), View.
         vb.btnSaveImage.setOnClickListener(this)
         vb.btnSaveVideo.setOnClickListener(this)
         vb.btnSaveAudio.setOnClickListener(this)
+        vb.btnSaveFile.setOnClickListener(this)
+        vb.btnReadImage.setOnClickListener(this)
 
     }
 
@@ -88,6 +92,63 @@ class FileActivity : BaseVmActivity<BaseViewModel, ActivityFileBinding>(), View.
             R.id.btn_save_image -> saveImageToPublic()
             R.id.btn_save_video -> saveVideoToPublic()
             R.id.btn_save_audio -> saveAudioToPublic()
+            R.id.btn_save_file -> saveFileToPublic()
+            R.id.btn_read_image -> readImageFromPublic()
+        }
+    }
+
+    private fun readImageFromPublic() {
+        startActivity<ReadMediaActivity>()
+    }
+
+    private fun saveFileToPublic() {
+        //保存文件到公共目录
+        val assetFileName = "file.txt"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val insertUri = contentResolver.insert(
+                MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                ContentValues().apply {
+                    val currentTimeMillis = System.currentTimeMillis()
+                    put(MediaStore.DownloadColumns.DATE_ADDED, currentTimeMillis)
+                    put(MediaStore.DownloadColumns.DATE_TAKEN, currentTimeMillis)
+                    put(MediaStore.DownloadColumns.MIME_TYPE, MimeTypeMap.getSingleton().getMimeTypeFromExtension("txt"))
+                    put(MediaStore.DownloadColumns.DISPLAY_NAME, assetFileName)
+//                    put(MediaStore.DownloadColumns.RELATIVE_PATH, category)
+                    put(MediaStore.DownloadColumns.IS_PENDING, 1)
+                }) ?: return
+            contentResolver.openOutputStream(insertUri)?.use { outputStream ->
+                val copyResult = assets.open(assetFileName).copyTo(outputStream)
+                if (copyResult > 0) {
+                    contentResolver.update(insertUri, ContentValues().apply {
+                        put(MediaStore.DownloadColumns.IS_PENDING, 0)
+                    }, null, null)
+                    vb.tvMediaInfo.text = "保存文件成功"
+                }
+            }
+        } else {
+            //需要写入文件的权限
+            requestPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) {
+                //获取下载目录
+                val directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                var targetFile = File(directory, assetFileName)
+                var index = 0
+                while (targetFile.exists()) {
+                    index++
+                    targetFile = File(directory, "file($index).txt")
+                }
+                targetFile.outputStream().use { outputStream ->
+                    val length = assets.open(assetFileName).copyTo(outputStream)
+                    if (length > 0) {
+                        MediaScannerConnection.scanFile(
+                            this,
+                            arrayOf(targetFile.absolutePath),
+                            null,
+                            null
+                        )
+                        vb.tvMediaInfo.text = "保存文件downloads成功"
+                    }
+                }
+            }
         }
     }
 

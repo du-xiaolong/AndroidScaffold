@@ -135,8 +135,52 @@
                 android:text="保存音频"
                 android:textSize="12sp" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_save_file"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="保存文件"
+                android:textSize="12sp" />
+
 
         </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_read_image"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="读取图片"
+                android:textSize="12sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_read_video"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="读取视频"
+                android:textSize="12sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_read_audio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="读取音频"
+                android:textSize="12sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_read_file"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="读取文件"
+                android:textSize="12sp" />
+
+
+        </LinearLayout>
+
 
 
 

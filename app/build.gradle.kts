@@ -54,4 +54,7 @@ dependencies {
 
     implementation(project(mapOf("path" to ":scaffold")))
 
+    implementation ("io.github.lucksiege:pictureselector:v3.11.1")
+
+
 }
