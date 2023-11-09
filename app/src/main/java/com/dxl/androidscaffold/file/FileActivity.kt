@@ -111,7 +111,10 @@ class FileActivity : BaseVmActivity<BaseViewModel, ActivityFileBinding>(), View.
                     val currentTimeMillis = System.currentTimeMillis()
                     put(MediaStore.DownloadColumns.DATE_ADDED, currentTimeMillis)
                     put(MediaStore.DownloadColumns.DATE_TAKEN, currentTimeMillis)
-                    put(MediaStore.DownloadColumns.MIME_TYPE, MimeTypeMap.getSingleton().getMimeTypeFromExtension("txt"))
+                    put(
+                        MediaStore.DownloadColumns.MIME_TYPE,
+                        MimeTypeMap.getSingleton().getMimeTypeFromExtension("txt")
+                    )
                     put(MediaStore.DownloadColumns.DISPLAY_NAME, assetFileName)
 //                    put(MediaStore.DownloadColumns.RELATIVE_PATH, category)
                     put(MediaStore.DownloadColumns.IS_PENDING, 1)
@@ -129,7 +132,8 @@ class FileActivity : BaseVmActivity<BaseViewModel, ActivityFileBinding>(), View.
             //需要写入文件的权限
             requestPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) {
                 //获取下载目录
-                val directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                val directory =
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                 var targetFile = File(directory, assetFileName)
                 var index = 0
                 while (targetFile.exists()) {
@@ -316,7 +320,7 @@ class FileActivity : BaseVmActivity<BaseViewModel, ActivityFileBinding>(), View.
                             vb.tvMediaInfo.text = "保存视频到${category}成功"
                         }
                     }
-                }else{
+                } else {
                     //需要写入文件的权限
                     requestPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) {
                         val directory = Environment.getExternalStoragePublicDirectory(category)

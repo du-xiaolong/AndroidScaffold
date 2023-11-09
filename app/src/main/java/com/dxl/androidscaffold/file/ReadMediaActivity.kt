@@ -1,10 +1,6 @@
 package com.dxl.androidscaffold.file
 
-import android.Manifest
-import android.annotation.SuppressLint
-import android.app.AlertDialog
 import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
 import android.view.ViewGroup
 import android.widget.TextView
@@ -18,11 +14,11 @@ import com.dxl.androidscaffold.databinding.ActivityReadMediaBinding
 import com.dxl.androidscaffold.databinding.ItemMediaBinding
 import com.dxl.scaffold.base.BaseViewModel
 import com.dxl.scaffold.base.BaseVmActivity
+import com.dxl.scaffold.utils.MediaUtils
 import com.dxl.scaffold.utils.dp
-import com.dxl.scaffold.utils.lllog
+import com.dxl.scaffold.utils.format
 import com.dxl.scaffold.utils.loadImage
 import com.dxl.scaffold.utils.toast
-import com.permissionx.guolindev.PermissionX
 
 /**
  *
@@ -68,11 +64,19 @@ class ReadMediaActivity : BaseVmActivity<BaseViewModel, ActivityReadMediaBinding
     }
 
     private val mediaAdapter by lazy {
-        object : BaseQuickAdapter<MediaUtils.Media, BaseDataBindingHolder<ItemMediaBinding>>(R.layout.item_media) {
-            override fun convert(holder: BaseDataBindingHolder<ItemMediaBinding>, item: MediaUtils.Media) {
+        object :
+            BaseQuickAdapter<MediaUtils.Media, BaseDataBindingHolder<ItemMediaBinding>>(R.layout.item_media) {
+            override fun convert(
+                holder: BaseDataBindingHolder<ItemMediaBinding>,
+                item: MediaUtils.Media
+            ) {
                 holder.dataBinding?.apply {
-                    when{
-                        item.mimeType.startsWith("image/") -> iv.loadImage(activity = this@ReadMediaActivity, uri = item.uri)
+                    when {
+                        item.mimeType.startsWith("image/") -> iv.loadImage(
+                            activity = this@ReadMediaActivity,
+                            uri = item.uri
+                        )
+
                         item.mimeType.startsWith("video/") -> iv.setImageResource(R.drawable.bg_video)
                         item.mimeType.startsWith("audio/") -> iv.setImageResource(R.drawable.bg_audio)
                         else -> iv.setImageResource(R.drawable.bg_file)
@@ -85,19 +89,26 @@ class ReadMediaActivity : BaseVmActivity<BaseViewModel, ActivityReadMediaBinding
     }
 
 
-
     private fun loadMedias() {
-        checkedAlbum?.id?.let {
-            val medias = MediaUtils.readMedias(this, checkedMediaType, it)
-            mediaAdapter.setList(medias)
+        checkedAlbum?.id?.let { id ->
+            showLoading("加载中")
+            MediaUtils.readMedias(this, checkedMediaType, id) { mediasResult ->
+                dismissLoading()
+                if (mediasResult.isSuccess) {
+                    mediaAdapter.setList(mediasResult.getOrNull())
+                } else {
+                    mediasResult.exceptionOrNull()?.format()?.toast()
+                }
+            }
+
         }
     }
 
     override fun init(savedInstanceState: Bundle?) {
-//        requestPermission()
         initView()
     }
 
+    @MediaUtils.MediaType
     private var checkedMediaType: Int = MediaUtils.MediaType.ALL
     private var checkedAlbum: MediaUtils.Album? = null
 
@@ -118,74 +129,18 @@ class ReadMediaActivity : BaseVmActivity<BaseViewModel, ActivityReadMediaBinding
     }
 
     private fun loadAlbums() {
-        val albums = MediaUtils.queryAllAlbums(this, checkedMediaType)
-        checkedAlbum = albums.firstOrNull()
-        albumAdapter.setList(albums)
-        loadMedias()
-    }
-
-    private fun requestPermission() {
-        val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            listOf(
-                Manifest.permission.READ_MEDIA_IMAGES,
-                Manifest.permission.READ_MEDIA_VIDEO,
-                Manifest.permission.READ_MEDIA_AUDIO
-            )
-        } else {
-            listOf(Manifest.permission.READ_EXTERNAL_STORAGE)
-        }
-        PermissionX.init(this).permissions(permissions).request { allGranted, _, _ ->
-            if (allGranted) {
-                "已获取全部权限".toast()
+        showLoading("加载中...")
+        MediaUtils.queryAllAlbums(this, checkedMediaType) { albumResult ->
+            dismissLoading()
+            if (albumResult.isSuccess) {
+                val albumList = albumResult.getOrNull()
+                checkedAlbum = albumList?.firstOrNull()
+                albumAdapter.setList(albumList)
+                loadMedias()
             } else {
-                "未获取权限，只能读取本应用创建的媒体".toast()
+                albumResult.exceptionOrNull()?.format()?.toast()
             }
         }
     }
-
-
-    private fun readMedia() {
-        val types = arrayOf("全部", "图片", "视频", "音频")
-        AlertDialog.Builder(this)
-            .setItems(types) { _, which ->
-                val mediaType = when (which) {
-                    0 -> MediaUtils.MediaType.ALL
-                    1 -> MediaUtils.MediaType.IMAGE
-                    2 -> MediaUtils.MediaType.VIDEO
-                    3 -> MediaUtils.MediaType.AUDIO
-                    else -> MediaUtils.MediaType.ALL
-                }
-                val albums = MediaUtils.queryAllAlbums(this, mediaType)
-                AlertDialog.Builder(this)
-                    .setItems(
-                        albums.map { it.displayName }.toTypedArray()
-                    ) { _, _which ->
-                        val album = albums[_which]
-                        val uris = MediaUtils.readMedias(this, mediaType, album.id)
-                        lllog(uris)
-                    }.show()
-
-            }.show()
-    }
-
-
-    @SuppressLint("Range")
-    private fun readAlbums() {
-        val types = arrayOf("全部", "图片", "视频", "音频")
-        AlertDialog.Builder(this)
-            .setItems(types) { _, which ->
-                val mediaType = when (which) {
-                    0 -> MediaUtils.MediaType.ALL
-                    1 -> MediaUtils.MediaType.IMAGE
-                    2 -> MediaUtils.MediaType.VIDEO
-                    3 -> MediaUtils.MediaType.AUDIO
-                    else -> MediaUtils.MediaType.ALL
-                }
-                val albums = MediaUtils.queryAllAlbums(this, mediaType)
-            }.show()
-    }
-
-
-
 
 }
