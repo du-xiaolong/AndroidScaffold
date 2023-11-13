@@ -15,6 +15,7 @@
         <RadioButton
             android:id="@+id/rb_all"
             android:layout_width="0dp"
+            android:checked="true"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="全部" />

@@ -2,6 +2,7 @@ package com.dxl.androidscaffold.file
 
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -19,6 +20,14 @@ import com.dxl.scaffold.utils.dp
 import com.dxl.scaffold.utils.format
 import com.dxl.scaffold.utils.loadImage
 import com.dxl.scaffold.utils.toast
+import com.luck.picture.lib.basic.PictureSelector
+import com.luck.picture.lib.config.SelectMimeType
+import com.luck.picture.lib.entity.LocalMedia
+import com.luck.picture.lib.entity.LocalMediaFolder
+import com.luck.picture.lib.interfaces.OnQueryAllAlbumListener
+import com.luck.picture.lib.interfaces.OnQueryDataResultListener
+import com.luck.picture.lib.loader.IBridgeMediaLoader
+import java.util.ArrayList
 
 /**
  *
@@ -125,13 +134,15 @@ class ReadMediaActivity : BaseVmActivity<BaseViewModel, ActivityReadMediaBinding
             }
             loadAlbums()
         }
-        vb.rgType.check(vb.rbAll.id)
+        loadAlbums()
     }
 
     private fun loadAlbums() {
         showLoading("加载中...")
+        Log.d("查询", "开始查询")
         MediaUtils.queryAllAlbums(this, checkedMediaType) { albumResult ->
             dismissLoading()
+            Log.d("查询", "loadAlbums: $albumResult")
             if (albumResult.isSuccess) {
                 val albumList = albumResult.getOrNull()
                 checkedAlbum = albumList?.firstOrNull()
@@ -141,6 +152,7 @@ class ReadMediaActivity : BaseVmActivity<BaseViewModel, ActivityReadMediaBinding
                 albumResult.exceptionOrNull()?.format()?.toast()
             }
         }
+
     }
 
 }

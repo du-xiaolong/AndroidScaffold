@@ -110,7 +110,7 @@ object MediaUtils {
         var count: Int,
     ) {
         companion object {
-            const val ALL = -1
+            const val ALL = -1L
         }
 
         override fun equals(other: Any?): Boolean {
@@ -123,7 +123,6 @@ object MediaUtils {
 
         override fun hashCode() = id.hashCode()
     }
-
 
 
     private suspend fun requestPermission(
@@ -151,28 +150,33 @@ object MediaUtils {
         val uri = MediaStore.Files.getContentUri("external")
         context.contentResolver.query(
             uri,
-            null,
-            MediaStore.Files.FileColumns.MEDIA_TYPE + " in (" + getMediaTypeArgs(mediaType) + ")",
+            arrayOf(
+                MediaStore.Files.FileColumns.BUCKET_ID,
+                MediaStore.Files.FileColumns.BUCKET_DISPLAY_NAME
+            ),
+            MediaStore.Files.FileColumns.MEDIA_TYPE + " in (" + getMediaTypeArgs(mediaType) + ") and 0 <  ${MediaStore.MediaColumns.SIZE}  and  ${MediaStore.MediaColumns.SIZE}  <= ${Long.MAX_VALUE}",
             null,
             MediaStore.Files.FileColumns.DATE_MODIFIED + " DESC "
         )?.use { cursor ->
-            cursor.moveToFirst()
-            do {
-                //相册ID
-                val bucketId =
-                    cursor.getLongOrNull(cursor.getColumnIndex(MediaStore.Files.FileColumns.BUCKET_ID))
-                        ?: continue
-                //相册名称
-                val bucketName =
-                    cursor.getStringOrNull(cursor.getColumnIndex(MediaStore.Files.FileColumns.BUCKET_DISPLAY_NAME))
-                        ?: continue
-                val find = albums.find { it.id == bucketId }
-                if (find == null) {
-                    albums.add(Album(bucketId, bucketName, 1))
-                } else {
-                    find.count++
-                }
-            } while (cursor.moveToNext())
+            albums.add(0, Album(Album.ALL, "全部", cursor.count))
+            if (cursor.moveToFirst()){
+                do {
+                    //相册ID
+                    val bucketId =
+                        cursor.getLongOrNull(cursor.getColumnIndex(MediaStore.Files.FileColumns.BUCKET_ID))
+                            ?: continue
+                    //相册名称
+                    val bucketName =
+                        cursor.getStringOrNull(cursor.getColumnIndex(MediaStore.Files.FileColumns.BUCKET_DISPLAY_NAME))
+                            ?: continue
+                    val find = albums.find { it.id == bucketId }
+                    if (find == null) {
+                        albums.add(Album(bucketId, bucketName, 1))
+                    } else {
+                        find.count++
+                    }
+                } while (cursor.moveToNext())
+            }
         }
         return albums
     }
@@ -228,58 +232,58 @@ object MediaUtils {
                 MediaStore.Files.FileColumns.SIZE,
                 MediaStore.Files.FileColumns.DISPLAY_NAME
             ),
-            "( ${MediaStore.Files.FileColumns.BUCKET_ID} = $bucketId or $bucketId = ${Album.ALL} ) and ${MediaStore.Files.FileColumns.MEDIA_TYPE} in ( ${
-                getMediaTypeArgs(mediaType)
-            } )",
+            "( ${MediaStore.Files.FileColumns.BUCKET_ID} = $bucketId or $bucketId = ${Album.ALL} ) and ${MediaStore.Files.FileColumns.MEDIA_TYPE} in ( ${getMediaTypeArgs(mediaType)} ) ",
             null, MediaStore.Files.FileColumns.DATE_MODIFIED
         )?.use { cursor: Cursor ->
-            cursor.moveToFirst()
-            do {
-                val mimeType =
-                    cursor.getStringOrNull(cursor.getColumnIndex(MediaStore.Files.FileColumns.MIME_TYPE))
-                        ?: "*/*"
-                val contentUri = if (mimeType.startsWith("image/")) {
-                    //图片
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                } else if (mimeType.startsWith("video/")) {
-                    MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-                } else if (mimeType.startsWith("audio/")) {
-                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-                } else {
-                    MediaStore.Files.getContentUri("external")
-                }
-                val id =
-                    cursor.getLongOrNull(cursor.getColumnIndex(MediaStore.Files.FileColumns._ID))
-                        ?: continue
-                val displayName =
-                    cursor.getStringOrNull(cursor.getColumnIndex(MediaStore.Files.FileColumns.DISPLAY_NAME))
-                        ?: ""
-                val dateModified =
-                    cursor.getLongOrNull(cursor.getColumnIndex(MediaStore.Files.FileColumns.DATE_MODIFIED))
-                        ?: 0L
-                val mediaBucketId =
-                    cursor.getLongOrNull(cursor.getColumnIndex(MediaStore.Files.FileColumns.BUCKET_ID))
-                        ?: 0L
-                val bucketDisplayName =
-                    cursor.getStringOrNull(cursor.getColumnIndex(MediaStore.Files.FileColumns.BUCKET_DISPLAY_NAME))
-                        ?: ""
-                val size =
-                    cursor.getLongOrNull(cursor.getColumnIndex(MediaStore.Files.FileColumns.SIZE))
-                        ?: 0L
-                medias.add(
-                    Media(
-                        id,
-                        displayName,
-                        ContentUris.withAppendedId(contentUri, id),
-                        mimeType,
-                        size,
-                        dateModified,
-                        mediaBucketId,
-                        bucketDisplayName
+            if (cursor.moveToFirst()) {
+                do {
+                    val mimeType =
+                        cursor.getStringOrNull(cursor.getColumnIndex(MediaStore.Files.FileColumns.MIME_TYPE))
+                            ?: "*/*"
+                    val contentUri = if (mimeType.startsWith("image/")) {
+                        //图片
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                    } else if (mimeType.startsWith("video/")) {
+                        MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                    } else if (mimeType.startsWith("audio/")) {
+                        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                    } else {
+                        MediaStore.Files.getContentUri("external")
+                    }
+                    val id =
+                        cursor.getLongOrNull(cursor.getColumnIndex(MediaStore.Files.FileColumns._ID))
+                            ?: continue
+                    val displayName =
+                        cursor.getStringOrNull(cursor.getColumnIndex(MediaStore.Files.FileColumns.DISPLAY_NAME))
+                            ?: ""
+                    val dateModified =
+                        cursor.getLongOrNull(cursor.getColumnIndex(MediaStore.Files.FileColumns.DATE_MODIFIED))
+                            ?: 0L
+                    val mediaBucketId =
+                        cursor.getLongOrNull(cursor.getColumnIndex(MediaStore.Files.FileColumns.BUCKET_ID))
+                            ?: 0L
+                    val bucketDisplayName =
+                        cursor.getStringOrNull(cursor.getColumnIndex(MediaStore.Files.FileColumns.BUCKET_DISPLAY_NAME))
+                            ?: ""
+                    val size =
+                        cursor.getLongOrNull(cursor.getColumnIndex(MediaStore.Files.FileColumns.SIZE))
+                            ?: 0L
+                    medias.add(
+                        Media(
+                            id,
+                            displayName,
+                            ContentUris.withAppendedId(contentUri, id),
+                            mimeType,
+                            size,
+                            dateModified,
+                            mediaBucketId,
+                            bucketDisplayName
+                        )
                     )
-                )
 
-            } while (cursor.moveToNext())
+                } while (cursor.moveToNext())
+            }
+
         }
         return medias
     }
@@ -425,7 +429,7 @@ object MediaUtils {
     fun InputStream.saveFileToPublic(
         activity: FragmentActivity,
         fileName: String,
-       saveResult: (Result<Uri>) -> Unit
+        saveResult: (Result<Uri>) -> Unit
     ) {
         activity.lifecycleScope.launch {
             val permissionGranted =

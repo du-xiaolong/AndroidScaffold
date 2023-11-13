@@ -1,8 +1,10 @@
 package com.dxl.androidscaffold.file
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.ContentValues
+import android.database.Cursor
 import android.media.MediaScannerConnection
 import android.os.Build
 import android.os.Bundle
@@ -14,6 +16,7 @@ import com.dxl.androidscaffold.R
 import com.dxl.androidscaffold.databinding.ActivityFileBinding
 import com.dxl.scaffold.base.BaseViewModel
 import com.dxl.scaffold.base.BaseVmActivity
+import com.dxl.scaffold.utils.lllog
 import com.dxl.scaffold.utils.startActivity
 import com.permissionx.guolindev.PermissionX
 import com.permissionx.guolindev.callback.RequestCallback
@@ -84,6 +87,7 @@ class FileActivity : BaseVmActivity<BaseViewModel, ActivityFileBinding>(), View.
         vb.btnSaveAudio.setOnClickListener(this)
         vb.btnSaveFile.setOnClickListener(this)
         vb.btnReadImage.setOnClickListener(this)
+        vb.btnReadFile.setOnClickListener(this)
 
     }
 
@@ -94,6 +98,27 @@ class FileActivity : BaseVmActivity<BaseViewModel, ActivityFileBinding>(), View.
             R.id.btn_save_audio -> saveAudioToPublic()
             R.id.btn_save_file -> saveFileToPublic()
             R.id.btn_read_image -> readImageFromPublic()
+            R.id.btn_read_file -> readFileFromPublic()
+        }
+    }
+
+    @SuppressLint("Range")
+    private fun readFileFromPublic() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            contentResolver.query(MediaStore.Downloads.EXTERNAL_CONTENT_URI, null, null, null, null)
+                ?.use { cursor: Cursor ->
+                    if (cursor.moveToFirst()) {
+                        do {
+                            val displayName =
+                                cursor.getString(cursor.getColumnIndex(MediaStore.DownloadColumns.DISPLAY_NAME))
+                            lllog(displayName, "查询")
+                        } while (cursor.moveToNext())
+                    } else {
+                        lllog("无数据", "查询")
+                    }
+                }
+        } else {
+
         }
     }
 
