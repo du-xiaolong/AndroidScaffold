@@ -1,5 +1,6 @@
 package com.dxl.scaffold.utils
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.*
 import android.database.Cursor
@@ -8,7 +9,9 @@ import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.os.Environment.DIRECTORY_DCIM
 import android.os.Environment.DIRECTORY_DOWNLOADS
+import android.os.Environment.DIRECTORY_MUSIC
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.provider.OpenableColumns
@@ -16,16 +19,17 @@ import android.util.Log
 import android.webkit.CookieManager
 import android.webkit.MimeTypeMap
 import android.webkit.URLUtil
-import androidx.activity.ComponentActivity
 import androidx.core.content.FileProvider
 import androidx.core.database.getLongOrNull
 import androidx.core.database.getStringOrNull
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.blankj.utilcode.util.ConvertUtils
 import com.blankj.utilcode.util.FileIOUtils
 import com.blankj.utilcode.util.FileUtils
 import com.dxl.scaffold.base.BaseApp
+import com.permissionx.guolindev.PermissionX
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
@@ -57,7 +61,8 @@ import kotlin.coroutines.resumeWithException
  */
 fun fileDir(type: String): File {
     val dir =
-        BaseApp.applicationContext.getExternalFilesDir(type) ?: File(BaseApp.applicationContext.filesDir, type)
+        BaseApp.applicationContext.getExternalFilesDir(type)
+            ?: File(BaseApp.applicationContext.filesDir, type)
     if (!dir.exists()) dir.mkdirs()
     return dir
 }
@@ -66,7 +71,8 @@ fun fileDir(type: String): File {
  * 缓存目录（全局）
  */
 fun cacheDir(type: String): File {
-    val cacheDir = BaseApp.applicationContext.externalCacheDir ?: BaseApp.applicationContext.cacheDir
+    val cacheDir =
+        BaseApp.applicationContext.externalCacheDir ?: BaseApp.applicationContext.cacheDir
     val dir = File(cacheDir, type)
     if (!dir.exists()) dir.mkdirs()
     return dir
@@ -95,9 +101,9 @@ fun InputStream.saveToPublic(fileName: String) {
         .getMimeTypeFromExtension(fileName.substringAfterLast(".")) ?: "*/*"
     val directory = when {
         fileName.isVideo -> Environment.DIRECTORY_MOVIES
-        fileName.isAudio -> Environment.DIRECTORY_MUSIC
+        fileName.isAudio -> DIRECTORY_MUSIC
         fileName.isImage -> Environment.DIRECTORY_PICTURES
-        else -> Environment.DIRECTORY_DOWNLOADS
+        else -> DIRECTORY_DOWNLOADS
     }
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -118,7 +124,8 @@ fun InputStream.saveToPublic(fileName: String) {
         }
         val contentResolver = BaseApp.applicationContext.contentResolver
         val insert =
-            contentResolver.insert(uri, contentValues).requireNotNull { "插入失败，insertUri = null" }
+            contentResolver.insert(uri, contentValues)
+                .requireNotNull { "插入失败，insertUri = null" }
         contentResolver.openOutputStream(insert).use { outputStream ->
             val length = copyTo(outputStream.requireNotNull { "保存失败！outputStream = null" })
             require(length > 0) { "保存失败！length = 0" }
@@ -245,6 +252,7 @@ fun getPathByUri(context: Context, uri: Uri?): String? {
                 "download" -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     MediaStore.Downloads.EXTERNAL_CONTENT_URI
                 } else null
+
                 else -> null
             }
             val selectionArgs = arrayOf(split[1])
@@ -254,7 +262,7 @@ fun getPathByUri(context: Context, uri: Uri?): String? {
         //GoogleDriveProvider
         else if (isGoogleDriveUri(uri)) {
             return getGoogleDriveFilePath(uri, context)
-        }else{
+        } else {
             //others
         }
     }
@@ -275,11 +283,11 @@ fun getPathByUri(context: Context, uri: Uri?): String? {
             if (uriPath.startsWith("/root")) {
                 return uriPath.replace("/root".toRegex(), "")
             }
-        }else {
+        } else {
             //others
         }
         return getDataColumn(context, uri)
-    }else {
+    } else {
         //others
     }
     return getDataColumn(context, uri)
@@ -518,7 +526,7 @@ fun LifecycleOwner.downloadFile(
             .readTimeout(30 * 60 * 1000L)
             .writeTimeout(30 * 60 * 1000L)
             .connectTimeout(5 * 60 * 1000L)
-            .toDownloadFlow(descFile.absolutePath,)
+            .toDownloadFlow(descFile.absolutePath)
             .onProgress {
                 showLoading?.invoke(true, "正在下载(${it.progress}%)")
             }
@@ -731,61 +739,113 @@ private fun isHuaWeiUri(uri: Uri?): Boolean {
 
 
 /**
- * 下载文件，保存到公共目录（Downloads/云上鲁南）
+ *
+ * @receiver FragmentActivity
+ * @param url String
+ * @param fileName String?  文件名，如果为空，先去下载请求头里的文件名，如果没有的话，取链接的文件名
+ * @param publicDirectory String?  公共目录，比如 Environment.DIRECTORY_DOWNLOADS + "/子目录"
+ * @param onProgress Function1<[@kotlin.ParameterName] Progress, Unit>?
+ * @param onResult Function1<Result<String>, Unit>
  */
-fun ComponentActivity.downloadToPublic(url: String, fileName: String? = null, onProgress: ((progress: Progress) -> Unit)? = null, onResult: (Result<String>) -> Unit) {
-    lifecycleScope.launch {
-        //获取文件名
-        var downloadFileName = fileName
-        if (fileName.isNullOrBlank()) {
-            //请求真实的文件名
-            downloadFileName = requestDownloadFileName(url)
+fun FragmentActivity.downloadToPublic(
+    url: String,
+    fileName: String? = null,
+    publicDirectory: String? = null,
+    onProgress: ((progress: Progress) -> Unit)? = null,
+    onResult: (Result<String>) -> Unit
+) {
+    fun getFileName(response: Response, url: String, fileName: String?): String {
+        if (!fileName.isNullOrEmpty()) return fileName
+        val responseFileName = response.header("Content-Disposition")
+            ?.split(";")
+            ?.firstOrNull { it.trim().startsWith("filename=") }
+            ?.substringAfter("filename=")
+            ?.replace("\"", "")
+        if (!responseFileName.isNullOrEmpty()) return responseFileName
+        // 如果请求不到，使用链接文件名
+        return URLUtil.guessFileName(url, null, null) ?: "file"
+    }
+
+    val osFactory = object : UriFactory(this) {
+        override fun insert(response: Response): Uri {
+            val downloadFileName = getFileName(response, url, fileName)
+            var mimeType = response.body?.contentType()?.toString()
+            if (mimeType.isNullOrEmpty()) {
+                mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(
+                    MimeTypeMap.getFileExtensionFromUrl(downloadFileName)
+                ) ?: "*/*"
+            }
+            val directory = if (publicDirectory.isNullOrEmpty()) {
+                if (mimeType.contains("image"))
+                    DIRECTORY_DCIM
+                else if (mimeType.contains("video"))
+                    DIRECTORY_DCIM
+                else if (mimeType.contains("audio"))
+                    DIRECTORY_MUSIC
+                else DIRECTORY_DOWNLOADS
+
+            } else publicDirectory
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                ContentValues().run {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, downloadFileName) //文件名
+                    //取contentType响应头作为文件类型
+
+                    put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, directory)
+
+                    val uri: Uri = if (mimeType.contains("image")) {
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                    } else if (mimeType.contains("video")) {
+                        MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                    } else if (mimeType.contains("audio")) {
+                        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                    } else {
+                        MediaStore.Downloads.EXTERNAL_CONTENT_URI
+                    }
+                    context.contentResolver.insert(uri, this)
+                }
+                    ?: throw NullPointerException("Uri insert fail, Please change the file name")
+            } else {
+                val dir =
+                    Environment.getExternalStoragePublicDirectory(directory)
+                if (!dir.exists()) {
+                    dir.mkdirs()
+                }
+                val file = File(
+                    dir,
+                    downloadFileName
+                )
+                Uri.fromFile(file)
+            }
         }
-        if (downloadFileName.isNullOrBlank()){
-            //如果请求不到，使用链接文件名
-            downloadFileName = URLUtil.guessFileName(url, null, null)
-        }
-        if (downloadFileName.isNullOrBlank()) {
-            downloadFileName = "file"
+    }
+
+    fun privateDownload() {
+        lifecycleScope.launch {
+            RxHttp.get(url)
+                .toDownloadFlow(osFactory)
+                .onProgress {
+                    onProgress?.invoke(it)
+                }.catch {
+                    onResult.invoke(Result.failure(it))
+                }.collect {
+                    onResult.invoke(Result.success(it.toString()))
+                }
         }
 
-        RxHttp.get(url)
-            .toDownloadFlow(object : UriFactory(this@downloadToPublic) {
-                override fun insert(response: Response): Uri {
-                    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        ContentValues().run {
-                            put(MediaStore.MediaColumns.DISPLAY_NAME, downloadFileName) //文件名
-                            //取contentType响应头作为文件类型
-                            put(
-                                MediaStore.MediaColumns.MIME_TYPE,
-                                response.body?.contentType().toString()
-                            )
-                            //下载到Download目录
-                            put(
-                                MediaStore.MediaColumns.RELATIVE_PATH + "/云上鲁南",
-                                Environment.DIRECTORY_DOWNLOADS
-                            )
-                            val uri = MediaStore.Downloads.EXTERNAL_CONTENT_URI
-                            context.contentResolver.insert(uri, this)
-                        }
-                            ?: throw NullPointerException("Uri insert fail, Please change the file name")
-                    } else {
-                        Uri.fromFile(
-                            File(
-                                context.getExternalFilesDir("$DIRECTORY_DOWNLOADS/云上鲁南"),
-                                downloadFileName
-                            )
-                        )
-                    }
+    }
+
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+        PermissionX.init(this).permissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            .request { allGranted, _, _ ->
+                if (allGranted) {
+                    privateDownload()
+                } else {
+                    onResult.invoke(Result.failure(IllegalStateException("请到设置中开启存储权限")))
                 }
-            })
-            .onProgress {
-                onProgress?.invoke(it)
-            }.catch {
-                onResult.invoke(Result.failure(it))
-            }.collect {
-                onResult.invoke(Result.success(it.toString()))
             }
+    } else {
+        privateDownload()
     }
 }
 
@@ -797,7 +857,10 @@ suspend fun requestDownloadFileName(downloadUrl: String): String? = withContext(
     kotlin.runCatching {
         val url = URL(downloadUrl)
         val httpURLConnection = url.openConnection() as HttpURLConnection
-        httpURLConnection.addRequestProperty("Cookie", CookieManager.getInstance().getCookie(downloadUrl))
+        httpURLConnection.addRequestProperty(
+            "Cookie",
+            CookieManager.getInstance().getCookie(downloadUrl)
+        )
         httpURLConnection.connect()
         val headerField = httpURLConnection.getHeaderField("Content-Disposition")
         val fileName = headerField.split(";").firstOrNull { it.trim().startsWith("filename=") }

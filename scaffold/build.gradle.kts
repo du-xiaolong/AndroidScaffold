@@ -61,18 +61,18 @@ dependencies {
     api("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
 
     api("androidx.collection:collection-ktx:1.3.0")
-    api("androidx.fragment:fragment-ktx:1.6.1")
+    api("androidx.fragment:fragment-ktx:1.6.2")
     api("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
 
     api("com.squareup.retrofit2:retrofit:2.9.0")
     api("com.blankj:utilcodex:1.31.1")
 
     //rxHttp
-    api("com.github.liujingxing.rxhttp:rxhttp:3.2.1")
+    api("com.github.liujingxing.rxhttp:rxhttp:3.2.2")
     //添加okhttp依赖
     api("com.squareup.okhttp3:okhttp:4.11.0")
     //noinspection KaptUsageInsteadOfKsp
-    kapt("com.github.liujingxing.rxhttp:rxhttp-compiler:3.2.1")
+    kapt("com.github.liujingxing.rxhttp:rxhttp-compiler:3.2.2")
 
     // 图片压缩 (按需引入)
     api ("io.github.lucksiege:compress:v3.0.9")

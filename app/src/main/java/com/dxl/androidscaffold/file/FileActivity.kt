@@ -16,6 +16,8 @@ import com.dxl.androidscaffold.R
 import com.dxl.androidscaffold.databinding.ActivityFileBinding
 import com.dxl.scaffold.base.BaseViewModel
 import com.dxl.scaffold.base.BaseVmActivity
+import com.dxl.scaffold.utils.downloadFile
+import com.dxl.scaffold.utils.downloadToPublic
 import com.dxl.scaffold.utils.lllog
 import com.dxl.scaffold.utils.startActivity
 import com.permissionx.guolindev.PermissionX
@@ -89,6 +91,7 @@ class FileActivity : BaseVmActivity<BaseViewModel, ActivityFileBinding>(), View.
         vb.btnReadImage.setOnClickListener(this)
         vb.btnReadFile.setOnClickListener(this)
 
+        vb.btnDownloadFile.setOnClickListener(this)
     }
 
     override fun onClick(v: View?) {
@@ -99,6 +102,13 @@ class FileActivity : BaseVmActivity<BaseViewModel, ActivityFileBinding>(), View.
             R.id.btn_save_file -> saveFileToPublic()
             R.id.btn_read_image -> readImageFromPublic()
             R.id.btn_read_file -> readFileFromPublic()
+            R.id.btn_download_file -> downloadFile()
+        }
+    }
+
+    private fun downloadFile() {
+        downloadToPublic("https://k.sinaimg.cn/n/sinakd20231207s/261/w640h421/20231207/b62f-df22051593426b8ff7e06d926feec36c.png/w700d1q75cms.jpg", publicDirectory = "${Environment.DIRECTORY_DCIM}/鲁南") {
+            vb.tvMediaInfo.text = "下载成功：${it.getOrNull()}"
         }
     }
 
@@ -121,6 +131,7 @@ class FileActivity : BaseVmActivity<BaseViewModel, ActivityFileBinding>(), View.
 
         }
     }
+
 
     private fun readImageFromPublic() {
         startActivity<ReadMediaActivity>()
