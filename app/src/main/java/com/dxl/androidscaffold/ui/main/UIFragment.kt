@@ -9,6 +9,7 @@ import com.dxl.androidscaffold.databinding.FragmentUiBinding
 import com.dxl.androidscaffold.databinding.ItemUiFunctionBinding
 import com.dxl.androidscaffold.file.FileActivity
 import com.dxl.androidscaffold.ui.waterMark.WaterMarkDemoActivity
+import com.dxl.androidscaffold.ui.waterMarkerCamera.WaterMarkerCameraActivity
 import com.dxl.scaffold.base.BaseViewModel
 import com.dxl.scaffold.base.BaseVmFragment
 import com.dxl.scaffold.utils.startActivity
@@ -27,7 +28,8 @@ class UIFragment : BaseVmFragment<BaseViewModel, FragmentUiBinding>() {
     override fun initView() {
         val funcs = listOf(
             "水印",
-            "文件"
+            "文件",
+            "水印相机"
         )
         vb.rvFuncs.adapter = object :
             BaseQuickAdapter<String, BaseDataBindingHolder<ItemUiFunctionBinding>>(
@@ -55,6 +57,9 @@ class UIFragment : BaseVmFragment<BaseViewModel, FragmentUiBinding>() {
             }
             "文件" -> {
                 startActivity<FileActivity>()
+            }
+            "水印相机" -> {
+                startActivity<WaterMarkerCameraActivity>()
             }
         }
     }

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="30dp"
+    android:paddingBottom="30dp"
+    tools:background="@color/black">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/cl"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="30dp"
+        android:background="@drawable/bg_white_r8"
+        android:padding="9dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/tv_type"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_ff4400_r2"
+            android:paddingStart="19dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="19dp"
+            android:paddingBottom="10dp"
+            android:text="打卡"
+            android:textColor="#ffffffff"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tv_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="14:19"
+            android:textColor="#ff00c6c4"
+            android:textSize="40sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@id/tv_type"
+            app:layout_constraintStart_toEndOf="@id/tv_type"
+            app:layout_constraintTop_toTopOf="@id/tv_type" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <View
+        android:id="@+id/v1"
+        android:layout_width="2dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="25dp"
+        android:layout_marginTop="24dp"
+        android:background="@drawable/bg_00c6c4_r2"
+        app:layout_constraintBottom_toBottomOf="@id/tv_address"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/cl" />
+
+    <TextView
+        android:id="@+id/tv_address"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="80dp"
+        android:shadowColor="#14212121"
+        android:shadowDx="0"
+        android:shadowDy="6"
+        android:shadowRadius="3.0"
+        android:text="甘肃省嘉峪关市钢城街道轻住·君澜酒店(镜子铁路小吃街店）"
+        android:textColor="#ffffffff"
+        android:textSize="26sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/v1"
+        app:layout_constraintTop_toTopOf="@id/v1" />
+
+
+    <TextView
+        android:id="@+id/tv_time_detail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:shadowColor="#14212121"
+        android:shadowDx="0"
+        android:shadowDy="6"
+        android:shadowRadius="3.0"
+        android:text="2023.10.27  11:38:36  星期五"
+        android:textColor="#ffffffff"
+        android:textSize="24sp"
+        app:layout_constraintStart_toStartOf="@id/tv_address"
+        app:layout_constraintTop_toBottomOf="@id/tv_address" />
+
+
+    <TextView
+        android:id="@+id/tv_location"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:shadowColor="#29212121"
+        android:shadowDx="0"
+        android:shadowDy="6"
+        android:shadowRadius="3.0"
+        android:text="经度：119.464250  纬度：35.433051"
+        android:textColor="#b3ffffff"
+        android:textSize="20sp"
+        app:layout_constraintStart_toStartOf="@id/tv_time_detail"
+        app:layout_constraintTop_toBottomOf="@id/tv_time_detail" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
