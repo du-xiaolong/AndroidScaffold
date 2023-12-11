@@ -24,6 +24,11 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        ndk {
+            // 设置支持的SO库架构
+            abiFilters += setOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+        }
     }
 
     buildFeatures{
@@ -86,4 +91,13 @@ dependencies {
     implementation ("io.github.lucksiege:pictureselector:v3.11.1")
 
 
+    //百度地图
+    //地图组件
+    implementation ("com.baidu.lbsyun:BaiduMapSDK_Map:7.5.4")
+    //全量定位
+    implementation ("com.baidu.lbsyun:BaiduMapSDK_Location_All:9.3.7")
+    //搜索
+    implementation ("com.baidu.lbsyun:BaiduMapSDK_Search:7.5.4")
+    //工具组件
+    implementation ("com.baidu.lbsyun:BaiduMapSDK_Util:7.5.4")
 }

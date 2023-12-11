@@ -5,6 +5,7 @@ import com.chad.library.adapter.base.BaseQuickAdapter
 import com.chad.library.adapter.base.listener.OnItemClickListener
 import com.chad.library.adapter.base.viewholder.BaseDataBindingHolder
 import com.dxl.androidscaffold.R
+import com.dxl.androidscaffold.baidu.BaiduMapActivity
 import com.dxl.androidscaffold.databinding.FragmentUiBinding
 import com.dxl.androidscaffold.databinding.ItemUiFunctionBinding
 import com.dxl.androidscaffold.file.FileActivity
@@ -29,7 +30,8 @@ class UIFragment : BaseVmFragment<BaseViewModel, FragmentUiBinding>() {
         val funcs = listOf(
             "水印",
             "文件",
-            "水印相机"
+            "水印相机",
+            "百度地图"
         )
         vb.rvFuncs.adapter = object :
             BaseQuickAdapter<String, BaseDataBindingHolder<ItemUiFunctionBinding>>(
@@ -60,6 +62,9 @@ class UIFragment : BaseVmFragment<BaseViewModel, FragmentUiBinding>() {
             }
             "水印相机" -> {
                 startActivity<WaterMarkerCameraActivity>()
+            }
+            "百度地图" -> {
+                startActivity<BaiduMapActivity>()
             }
         }
     }
