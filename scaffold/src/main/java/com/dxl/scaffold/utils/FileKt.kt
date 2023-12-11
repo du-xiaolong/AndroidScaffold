@@ -95,16 +95,21 @@ fun File.saveToPublic() {
 /**
  * 保存文件到公共目录
  * 注意：Android Q以下的版本需要申请写入文件权限，否则无法保存成功，Android Q及以上版本无需申请
+ * @param fileName 保存的文件名
+ * @param publicDirectory 保存的公共目录路径，如 “Pictures/myapp"
  */
-fun InputStream.saveToPublic(fileName: String) {
+fun InputStream.saveToPublic(fileName: String, publicDirectory: String? = null) {
     val realMimeType = MimeTypeMap.getSingleton()
         .getMimeTypeFromExtension(fileName.substringAfterLast(".")) ?: "*/*"
-    val directory = when {
-        fileName.isVideo -> Environment.DIRECTORY_MOVIES
-        fileName.isAudio -> DIRECTORY_MUSIC
-        fileName.isImage -> Environment.DIRECTORY_PICTURES
-        else -> DIRECTORY_DOWNLOADS
-    }
+
+    val directory = if (publicDirectory.isNullOrEmpty()) {
+        when {
+            fileName.isVideo -> Environment.DIRECTORY_MOVIES
+            fileName.isAudio -> DIRECTORY_MUSIC
+            fileName.isImage -> Environment.DIRECTORY_PICTURES
+            else -> DIRECTORY_DOWNLOADS
+        }
+    } else publicDirectory
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         val contentValues = ContentValues().apply {
@@ -116,6 +121,7 @@ fun InputStream.saveToPublic(fileName: String) {
             put(MediaStore.Images.Media.RELATIVE_PATH, directory)
             put(MediaStore.MediaColumns.IS_PENDING, 1)
         }
+
         val uri = when {
             fileName.isVideo -> MediaStore.Video.Media.EXTERNAL_CONTENT_URI
             fileName.isAudio -> MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
@@ -136,6 +142,9 @@ fun InputStream.saveToPublic(fileName: String) {
     } else {
         val publicDirectory =
             Environment.getExternalStoragePublicDirectory(directory)
+        if (!publicDirectory.exists()) {
+            publicDirectory.mkdirs()
+        }
         var targetFile = File(publicDirectory, fileName)
         var currentIndex = 0
         //如果已经有这个文件名了，就在文件名后边添加（1），依次类推
@@ -194,16 +203,14 @@ fun getPathByUri(context: Context, uri: Uri?): String? {
                         .toString() + File.separator + split[1]
                 }
             } else if ("home".equals(type, ignoreCase = true)) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    return context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)
+                return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)
                         .toString() + File.separator + "documents" + File.separator + split[1]
                 } else {
-                    @Suppress("DEPRECATION")
-                    return Environment.getExternalStorageDirectory()
+                    Environment.getExternalStorageDirectory()
                         .toString() + File.separator + "documents" + File.separator + split[1]
                 }
             } else {
-                @Suppress("DEPRECATION")
                 val sdcardPath =
                     Environment.getExternalStorageDirectory()
                         .toString() + File.separator + "documents" + File.separator + split[1]
