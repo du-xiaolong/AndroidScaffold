@@ -88,6 +88,7 @@
         <activity android:name="com.dxl.androidscaffold.ui.waterMarkerCamera.WaterMarkerCameraActivity" />
         <activity android:name="com.dxl.androidscaffold.baidu.BaiduMapActivity" />
         <activity android:name="com.dxl.androidscaffold.assist.AssistActivity" />
+        <activity android:name="com.dxl.androidscaffold.ui.compose.ComposeActivity" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
