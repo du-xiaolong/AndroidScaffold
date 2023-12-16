@@ -1,8 +1,6 @@
 package com.dxl.androidscaffold.ui.main
 
-import android.view.View
 import com.chad.library.adapter.base.BaseQuickAdapter
-import com.chad.library.adapter.base.listener.OnItemClickListener
 import com.chad.library.adapter.base.viewholder.BaseDataBindingHolder
 import com.dxl.androidscaffold.R
 import com.dxl.androidscaffold.assist.AssistActivity

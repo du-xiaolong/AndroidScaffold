@@ -1,11 +1,13 @@
 package com.dxl.androidscaffold
 
 import android.os.Bundle
+import androidx.activity.compose.setContent
 import androidx.core.view.forEachIndexed
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.dxl.androidscaffold.databinding.ActivityMainBinding
+import com.dxl.androidscaffold.ui.compose.ComposeFragment
 import com.dxl.androidscaffold.ui.main.UIFragment
 import com.dxl.scaffold.base.BaseViewModel
 import com.dxl.scaffold.base.BaseVmActivity
@@ -15,7 +17,7 @@ class MainActivity : BaseVmActivity<BaseViewModel, ActivityMainBinding>() {
     override fun init(savedInstanceState: Bundle?) {
         val fragments = listOf(
             UIFragment.newInstance(),
-            BlankFragment.newInstance(),
+            ComposeFragment.newInstance(),
             BlankFragment.newInstance(),
             BlankFragment.newInstance(),
             BlankFragment.newInstance()
