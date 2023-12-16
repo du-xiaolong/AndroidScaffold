@@ -128,5 +128,7 @@ dependencies {
     implementation("androidx.compose.runtime:runtime-livedata")
     //compose navigation
     implementation("androidx.navigation:navigation-compose:2.7.6")
+    //下拉刷新（m3官方没有下拉刷新控件了）
+    implementation("eu.bambooapps:compose-material3-pullrefresh:1.0.0")
 
 }
