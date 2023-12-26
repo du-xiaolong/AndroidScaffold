@@ -12,19 +12,28 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.view.View
+import android.view.View.MeasureSpec.UNSPECIFIED
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
 import com.baidu.location.BDLocation
+import com.blankj.utilcode.util.ScreenUtils
 import com.dxl.androidscaffold.baidu.BaiduLocation
 import com.dxl.androidscaffold.databinding.ActivityWaterMarkerCameraBinding
 import com.dxl.androidscaffold.databinding.ViewWaterMarkerBinding
 import com.dxl.androidscaffold.ui.waterMark.WaterMarkDrawable.Companion.setWaterMark
+import com.dxl.scaffold.utils.lllog
+import com.dxl.scaffold.utils.llloge
+import top.zibin.luban.Luban
+import top.zibin.luban.OnNewCompressListener
+import java.io.File
 import java.io.InputStream
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import kotlin.math.max
 
 /**
  * 水印相机
@@ -40,16 +49,24 @@ class WaterMarkerCameraActivity : AppCompatActivity() {
     private var currentLocation: BDLocation? = null
 
     private fun createCameraUri(): Uri? {
-        return contentResolver.insert(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            ContentValues().apply {
-                put(
-                    MediaStore.Images.ImageColumns.DISPLAY_NAME,
-                    "${System.currentTimeMillis()}.jpg"
-                )
-                put(MediaStore.Images.ImageColumns.MIME_TYPE, "image/jpeg")
-                put(MediaStore.Images.ImageColumns.RELATIVE_PATH, Environment.DIRECTORY_DCIM)
-            })
+        return if (viewBinding.chkSaveOrigin.isChecked) {
+            contentResolver.insert(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                ContentValues().apply {
+                    put(
+                        MediaStore.Images.ImageColumns.DISPLAY_NAME,
+                        "${System.currentTimeMillis()}.jpg"
+                    )
+                    put(MediaStore.Images.ImageColumns.MIME_TYPE, "image/jpeg")
+                    put(MediaStore.Images.ImageColumns.RELATIVE_PATH, Environment.DIRECTORY_DCIM)
+                })
+        } else {
+            FileProvider.getUriForFile(
+                this,
+                "com.dxl.androidscaffold.fileProvider",
+                File(externalCacheDir, "${System.currentTimeMillis()}.jpg")
+            )
+        }
     }
 
     private val cameraPermissionLauncher =
@@ -65,70 +82,126 @@ class WaterMarkerCameraActivity : AppCompatActivity() {
     private val takeCameraLauncher =
         registerForActivityResult(ActivityResultContracts.TakePicture()) { takePictureResult ->
             if (takePictureResult) {
-                addWaterMarker()
+
+                if (viewBinding.chkCompress.isChecked) {
+                    //压缩
+                    Luban.with(this).setTargetDir(externalCacheDir!!.absolutePath)
+                        .load(cameraUri)
+                        .setCompressListener(object : OnNewCompressListener {
+                            override fun onStart() {
+                            }
+
+                            override fun onSuccess(source: String?, compressFile: File?) {
+                                addWaterMarker(compressFile?.inputStream())
+                            }
+
+                            override fun onError(source: String?, e: Throwable?) {
+                                llloge(e)
+                            }
+
+                        }).launch()
+                }else{
+                    contentResolver.openInputStream(cameraUri!!).use { inputStream: InputStream? ->
+                        addWaterMarker(inputStream)
+                    }
+                }
+
             }
 
         }
 
+
     @SuppressLint("SetTextI18n")
-    private fun addWaterMarker() {
-        val cameraUri = cameraUri ?: return
-        contentResolver.openInputStream(cameraUri).use { inputStream: InputStream? ->
-            val sourceBitmap = BitmapFactory.decodeStream(inputStream)
-            val createBitmap = Bitmap.createBitmap(
-                sourceBitmap.width,
-                sourceBitmap.height,
-                Bitmap.Config.ARGB_8888
+    private fun addWaterMarker(inputStream: InputStream?) {
+
+        val sourceBitmap = BitmapFactory.decodeStream(inputStream)
+        val createBitmap = Bitmap.createBitmap(
+            sourceBitmap.width,
+            sourceBitmap.height,
+            Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(createBitmap)
+        canvas.drawBitmap(sourceBitmap, 0f, 0f, null)
+        val waterMarkerBinding = ViewWaterMarkerBinding.inflate(layoutInflater)
+
+        //时间
+        val date = Date()
+        waterMarkerBinding.tvTime.text =
+            SimpleDateFormat("HH:mm", Locale.getDefault()).format(date)
+        //具体时间
+        val weeks =
+            arrayOf("星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六")
+        val week = weeks[Calendar.getInstance()[Calendar.DAY_OF_WEEK] - 1]
+        waterMarkerBinding.tvTimeDetail.text =
+            SimpleDateFormat(
+                "yyyy-MM-dd HH:mm:ss",
+                Locale.getDefault()
+            ).format(date) + " " + week
+        //地理位置
+        waterMarkerBinding.tvAddress.text =
+            currentLocation.address()
+        waterMarkerBinding.tvLocation.text =
+            "经度：${currentLocation?.longitude ?: 0.0}  纬度：${currentLocation?.latitude ?: 0.0}"
+        //类型
+        waterMarkerBinding.tvType.text = "打卡"
+
+        val scale = sourceBitmap.width / 3000f
+
+        val waterMarkerView = waterMarkerBinding.root
+        waterMarkerView.measure(
+            View.MeasureSpec.makeMeasureSpec(
+                (sourceBitmap.width / scale).toInt(),
+                View.MeasureSpec.EXACTLY
+            ),
+            View.MeasureSpec.makeMeasureSpec(
+                (sourceBitmap.height / scale).toInt(),
+                View.MeasureSpec.AT_MOST
             )
-            val canvas = Canvas(createBitmap)
-            canvas.drawBitmap(sourceBitmap, 0f, 0f, null)
-            val waterMarkerBinding = ViewWaterMarkerBinding.inflate(layoutInflater)
+        )
+        waterMarkerView.layout(
+            0,
+            0,
+            waterMarkerView.measuredWidth,
+            waterMarkerView.measuredHeight
+        )
+        canvas.save()
 
-            //时间
-            val date = Date()
-            waterMarkerBinding.tvTime.text =
-                SimpleDateFormat("HH:mm", Locale.getDefault()).format(date)
-            //具体时间
-            val weeks =
-                arrayOf("星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六")
-            val week = weeks[Calendar.getInstance()[Calendar.DAY_OF_WEEK] - 1]
-            waterMarkerBinding.tvTimeDetail.text =
-                SimpleDateFormat(
-                    "yyyy-MM-dd HH:mm:ss",
-                    Locale.getDefault()
-                ).format(date) + " " + week
-            //地理位置
-            waterMarkerBinding.tvAddress.text =
-                currentLocation.address()
-            waterMarkerBinding.tvLocation.text =
-                "经度：${currentLocation?.longitude ?: 0.0}  纬度：${currentLocation?.latitude ?: 0.0}"
-            //类型
-            waterMarkerBinding.tvType.text = "打卡"
+        val matrix = Matrix()
+        matrix.postScale(sourceBitmap.width * 1f / 3000, sourceBitmap.width * 1f / 3000)
 
-            val waterMarkerView = waterMarkerBinding.root
-            waterMarkerView.measure(
-                View.MeasureSpec.makeMeasureSpec(sourceBitmap.width, View.MeasureSpec.EXACTLY),
-                View.MeasureSpec.makeMeasureSpec(sourceBitmap.height, View.MeasureSpec.AT_MOST)
-            )
-            waterMarkerView.layout(
-                0,
-                0,
-                waterMarkerView.measuredWidth,
-                waterMarkerView.measuredHeight
-            )
-            canvas.save()
+        matrix.postTranslate(
+            0f,
+            (sourceBitmap.height - waterMarkerView.measuredHeight * scale)
+        )
 
-            val matrix = Matrix()
-            matrix.setTranslate(0f, sourceBitmap.height.toFloat() - waterMarkerView.measuredHeight)
-            canvas.setMatrix(matrix)
+        canvas.setMatrix(matrix)
 
-            waterMarkerView.draw(canvas)
+        waterMarkerView.draw(canvas)
 
-            canvas.restore()
+        canvas.restore()
 
-            viewBinding.ivPreview.setImageBitmap(createBitmap)
+        viewBinding.ivPreview.setImageBitmap(createBitmap)
 
+        if (viewBinding.chkSaveWater.isChecked) {
+            saveBitmapToPublic(createBitmap)
         }
+
+    }
+
+    private fun saveBitmapToPublic(bitmap: Bitmap) {
+        val insert = contentResolver.insert(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            ContentValues().apply {
+                put(
+                    MediaStore.Images.ImageColumns.DISPLAY_NAME,
+                    "${System.currentTimeMillis()}.jpg"
+                )
+                put(MediaStore.Images.ImageColumns.MIME_TYPE, "image/jpeg")
+                put(MediaStore.Images.ImageColumns.RELATIVE_PATH, Environment.DIRECTORY_DCIM)
+            })
+
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, contentResolver.openOutputStream(insert!!)!!)
+
     }
 
     private fun BDLocation?.address(): String {

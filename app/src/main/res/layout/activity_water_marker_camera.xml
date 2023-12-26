@@ -12,15 +12,33 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_save_file_to_public"
+    <CheckBox
+        android:id="@+id/chk_save_origin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:enabled="false"
-        android:text="保存相册"
-        app:layout_constraintBaseline_toBaselineOf="@id/btn_camera"
-        app:layout_constraintStart_toEndOf="@id/btn_camera" />
+        android:text="保存原图"
+        app:layout_constraintBottom_toBottomOf="@id/btn_camera"
+        app:layout_constraintStart_toEndOf="@id/btn_camera"
+        app:layout_constraintTop_toTopOf="@id/btn_camera" />
+
+    <CheckBox
+        android:id="@+id/chk_save_water"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="保存水印图"
+        app:layout_constraintBottom_toBottomOf="@id/chk_save_origin"
+        app:layout_constraintStart_toEndOf="@id/chk_save_origin"
+        app:layout_constraintTop_toTopOf="@id/chk_save_origin" />
+
+    <CheckBox
+        android:id="@+id/chk_compress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="压缩"
+        app:layout_constraintBottom_toBottomOf="@id/chk_save_water"
+        app:layout_constraintStart_toEndOf="@+id/chk_save_water"
+        app:layout_constraintTop_toTopOf="@id/chk_save_water" />
+
 
     <ImageView
         android:id="@+id/iv_preview"
